@@ -1,13 +1,13 @@
 !
-! SYS_SIZE is the number of clicks (16 bytes) to be loaded.
-! 0x3000 is 0x30000 bytes = 196kB, more than enough for current
+! SYS_SIZE is the number of clicks(节,两个字节) (16 bytes) to be loaded.
+! 0x3000 is 0x30000 bytes(就是大B, 小b是bit) = 196kB(应该是192KB), more than enough for current
 ! versions of linux
 !
 SYSSIZE = 0x3000
 !
 !	bootsect.s		(C) 1991 Linus Torvalds
 !
-! bootsect.s is loaded at 0x7c00 by the bios-startup routines, and moves
+! bootsect.s is loaded at 0x7c00 by the bios-startup(启动) routines, and moves
 ! iself out of the way to address 0x90000, and jumps there.
 !
 ! It then loads 'setup' directly after itself (0x90200), and the system

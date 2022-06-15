@@ -1,17 +1,20 @@
-!
-! SYS_SIZE is the number of clicks(节,两个字节) (16 bytes) to be loaded.
-! 0x3000 is 0x30000 bytes(就是大B, 小b是bit) = 196kB(应该是192KB), more than enough for current
-! versions of linux
+! dn: Intel 汇编
+! SYS_SIZE is the number of clicks(16 bytes) to be loaded.
+! dn: clicks 解释为节, 16 个字节, byte 字节, bit 是位, word 是字, 1w = 2B = 2bytes = 16b
+! 0x3000 is 0x30000 bytes = 192kB, more than enough for current versions of linux
 !
 SYSSIZE = 0x3000
 !
 !	bootsect.s		(C) 1991 Linus Torvalds
 !
-! bootsect.s is loaded at 0x7c00 by the bios-startup(启动) routines, and moves
+! bootsect.s is loaded at 0x7c00 by the bios-startup routines, and moves
+! dn: Why BIOS loads MBR into 0x7c00(see: https://www.glamenv-septzen.net/en/view/6,
+! https://www.ruanyifeng.com/blog/2015/09/0x7c00.html)
 ! iself out of the way to address 0x90000, and jumps there.
 !
 ! It then loads 'setup' directly after itself (0x90200), and the system
-! at 0x10000, using BIOS interrupts. 
+! dn: 0x400 = 2 ^ 10B = 1KB, 0x200 = 512B, bootsect.o 文件为 924B, 512B 也不够使用?
+! at 0x10000, using BIOS interrupts.
 !
 ! NOTE! currently system is at most 8*65536 bytes long. This should be no
 ! problem, even in the future. I want to keep it simple. This 512 kB
@@ -22,6 +25,8 @@ SYSSIZE = 0x3000
 ! read errors will result in a unbreakable loop. Reboot by hand. It
 ! loads pretty fast by getting whole sectors at a time whenever possible.
 
+! dn: 全局变量, 外部文件可以访问到这些变量
+! dn: 程序分段, beg 和 end 成对出现
 .globl begtext, begdata, begbss, endtext, enddata, endbss
 .text
 begtext:
@@ -43,7 +48,7 @@ ENDSEG   = SYSSEG + SYSSIZE		! where to stop loading
 ROOT_DEV = 0x306
 
 entry _start
-_start:
+_start: ! 将 bootsect 从 0x7c00 处移动 512B 到 0x90000 处
 	mov	ax,#BOOTSEG
 	mov	ds,ax
 	mov	ax,#INITSEG
@@ -64,7 +69,7 @@ go:	mov	ax,cs
 ! load the setup-sectors directly after the bootblock.
 ! Note that 'es' is already set up.
 
-load_setup:
+load_setup: ! 读入 setup
 	mov	dx,#0x0000		! drive 0, head 0
 	mov	cx,#0x0002		! sector 2, track 0
 	mov	bx,#0x0200		! address = 512, in INITSEG
@@ -94,10 +99,10 @@ ok_load_setup:
 	mov	ah,#0x03		! read cursor pos
 	xor	bh,bh
 	int	0x10
-	
-	mov	cx,#24
-	mov	bx,#0x0007		! page 0, attribute 7 (normal)
-	mov	bp,#msg1
+
+	mov	cx,#23
+	mov	bx,#0x0007		! page 0, attribute 7 (normal), 设置显示模式
+	mov	bp,#msg
 	mov	ax,#0x1301		! write string, move cursor
 	int	0x10
 
@@ -241,10 +246,10 @@ kill_motor:
 sectors:
 	.word 0
 
-msg1:
-	.byte 13,10
-	.ascii "Loading system ..."
+msg:
 	.byte 13,10,13,10
+	.ascii "Welcome Home!"
+	.byte 13,10,13,10,13,10
 
 .org 508
 root_dev:
